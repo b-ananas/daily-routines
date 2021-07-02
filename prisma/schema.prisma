@@ -24,4 +24,12 @@ model Routine {
   active  Boolean? @default(true)
   owner   User?    @relation(fields: [ownerId], references: [id])
   ownerId Int?
+  activities Activity[] 
+}
+
+model Activity {
+  id      Int      @id @default(autoincrement())
+  content String
+  routine Routine @relation(fields: [routineId], references: [id])
+  routineId Int
 }

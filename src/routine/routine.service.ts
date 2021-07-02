@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { Routine, Prisma } from '@prisma/client';
+import { Routine, Activity, Prisma } from '@prisma/client';
 
 @Injectable()
 export class RoutineService {
@@ -11,9 +11,23 @@ export class RoutineService {
   ): Promise<Routine | null> {
     return this.prisma.routine.findUnique({
       where: routineWhereUniqueInput,
+
+      include: {
+        activities: true,
+      },
     });
   }
 
+  async routineActivities(
+    routineWhereUniqueInput: Prisma.RoutineWhereUniqueInput,
+  ): Promise<Activity[] | null> {
+    const answ = this.prisma.activity.findMany({
+      where: {
+        routineId: (await this.routine(routineWhereUniqueInput)).id,
+      },
+    });
+    return answ;
+  }
   async routines(params: {
     skip?: number;
     take?: number;
@@ -23,6 +37,9 @@ export class RoutineService {
   }): Promise<Routine[]> {
     const { skip, take, cursor, where, orderBy } = params;
     return this.prisma.routine.findMany({
+      include: {
+        activities: true,
+      },
       skip,
       take,
       cursor,
