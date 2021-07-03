@@ -1,7 +1,0 @@
--- CreateTable
-CREATE TABLE "Activity" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "content" TEXT NOT NULL,
-    "routineId" INTEGER NOT NULL,
-    FOREIGN KEY ("routineId") REFERENCES "Routine" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
