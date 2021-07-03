@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  dr_api:
+    container_name: daily_routines_api
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+      - 9229:9229
+    env_file:
+      - .env
+    networks:
+      - webnet
+    command: npm run start
+    depends_on:
+      - dr_api_db
+  dr_api_db:
+    container_name: dr_api_db
+    image: postgres:12
+    env_file:
+      - .env
+    networks:
+      - webnet
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE_NAME}
+      PG_DATA: /var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports: 
+      - ${POSTGRES_PORT}:5432
+networks:
+  webnet:
+volumes:
+  pgdata:
