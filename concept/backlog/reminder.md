@@ -1,0 +1,1 @@
+Every routine can have a reminder system. Such a system will schedule next reminder and make sure it is delivered. It can work with google calendar (ex. add events and reminders automatically)
