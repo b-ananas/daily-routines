@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User, Prisma } from '@prisma/client';
-
+// const jwt = require('jsonwebtoken');
+import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 
 export type UserReturnType = {
@@ -22,8 +23,14 @@ type UserCreateInput = {
 };
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  private readonly jwt_secret: string;
+  private readonly jwt_lifespan: number;
+  constructor(private prisma: PrismaService) {
+    this.jwt_secret = process.env['JWT_SECRET_KEY'];
+    this.jwt_lifespan = 600;
+  }
 
+  //get single user
   async user(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<User | null> {
@@ -32,6 +39,7 @@ export class UserService {
     });
   }
 
+  //get all users
   async users(params: {
     skip?: number;
     take?: number;
@@ -65,6 +73,22 @@ export class UserService {
   async authenticate(data: UserLoginType): Promise<boolean> {
     const user = await this.user({ email: data.email });
     return bcrypt.compare(data.password, user.passwordDigest);
+  }
+
+  async getAccessToken(userId: number) {
+    const usr = await this.user({ id: userId });
+    const token_content = jwt.sign({ email: usr.email }, this.jwt_secret, {
+      algorithm: 'HS256',
+      expiresIn: this.jwt_lifespan,
+    });
+    const token = this.prisma.token.create({
+      data: {
+        userId: usr.id,
+        content: token_content,
+        valid: true,
+      },
+    });
+    return token;
   }
 
   async updateUser(params: {

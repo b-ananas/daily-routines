@@ -10,9 +10,7 @@ import { User as UserModel } from '@prisma/client';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post('/')
   async signupUser(
@@ -28,8 +26,14 @@ export class UserController {
   }
   @Post('/login')
   async signinUser(@Body() userData: UserLoginType) {
+    const user = await this.userService.user({ email: userData.email });
     if (await this.userService.authenticate(userData)) {
-      //return token
+      const tokenEntity = await this.userService.getAccessToken(user.id);
+      //todo: set http only cookie instead of returning
+      return {
+        login: true,
+        token: tokenEntity.content,
+      };
     }
     return null;
   }
