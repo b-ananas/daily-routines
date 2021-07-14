@@ -70,27 +70,6 @@ export class UserService {
     });
   }
 
-  async authenticate(data: UserLoginType): Promise<boolean> {
-    const user = await this.user({ email: data.email });
-    return bcrypt.compare(data.password, user.passwordDigest);
-  }
-
-  async getAccessToken(userId: number) {
-    const usr = await this.user({ id: userId });
-    const token_content = jwt.sign({ email: usr.email }, this.jwt_secret, {
-      algorithm: 'HS256',
-      expiresIn: this.jwt_lifespan,
-    });
-    const token = this.prisma.token.create({
-      data: {
-        userId: usr.id,
-        content: token_content,
-        valid: true,
-      },
-    });
-    return token;
-  }
-
   async updateUser(params: {
     where: Prisma.UserWhereUniqueInput;
     data: Prisma.UserUpdateInput;
