@@ -1,0 +1,1 @@
+You will be able to see all routines and their activities in form of a habit tracker
