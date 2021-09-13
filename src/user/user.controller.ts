@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Request,
+  Controller,
+  Get,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import {
   UserLoginType,
   UserRegisterType,
@@ -7,6 +15,10 @@ import {
 } from 'src/user/user.service';
 import { User as UserModel } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import * as cookieParser from 'cookie-parser';
+import { Response } from 'express';
+import { LocalAuthGuard } from 'src/auth/local.guard';
 
 @Controller('user')
 export class UserController {
@@ -27,33 +39,16 @@ export class UserController {
       email: user.email,
     };
   }
-  @Post('/login')
-  async signinUser(@Body() userData: UserLoginType) {
-    const user = await this.userService.user({ email: userData.email });
-    if (await this.authService.authenticate(userData.password, user)) {
-      const tokenEntity = await this.authService.getAccessToken(user);
-      //todo: set http only cookie instead of returning
-      return {
-        login: true,
-        token: tokenEntity.content,
-      };
-    }
-    return null;
+
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@Request() req) {
+    return this.authService.login(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/me')
+  async me(@Request() req) {
+    return req.user;
   }
 }
-// /* wip:
-
-// @Post('/login')
-// async signinUser(@Body() userData: UserLoginType, @Response() res: Response) {
-//   const user = await this.userService.user({ email: userData.email });
-//   if (await this.authService.authenticate(userData.password, user)) {
-//     const tokenEntity = await this.authService.getAccessToken(user);
-//     res.cookie('accessToken', tokenEntity.content, {
-//       expires: new Date(new Date().getTime() + 60 * 1000),
-//       sameSite: 'strict',
-//       httpOnly: true,
-//     });
-//     return res.send();
-//   }
-//   return null;
-// } /*

@@ -1,33 +1,35 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { UserLoginType, UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma.service';
 
 import * as bcrypt from 'bcrypt';
-import { Prisma, prisma, User } from '@prisma/client';
-import { authenticate } from 'passport';
-import { async } from 'rxjs';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
+    private jwtService: JwtService,
+    private userService: UserService,
     private prisma: PrismaService,
   ) {}
-
-  async getAccessToken(user: User) {
-    const token_content = this.jwtService.sign({ email: user.email });
-    const token = this.prisma.token.create({
-      data: {
-        userId: user.id,
-        content: token_content,
-        valid: true,
-      },
-    });
-    return token;
+  async authenticate(userEmail: string, password: string): Promise<any> {
+    const user = await this.userService.user({ email: userEmail });
+    if (bcrypt.compare(password, user.passwordDigest)) {
+      Logger.log(`Password authentication for email ${userEmail} successful!`);
+      const { passwordDigest, ...answ } = user;
+      return answ;
+    } else {
+      Logger.warn(
+        `Password authentication for email ${userEmail} unsuccessful!`,
+      );
+      return null;
+    }
   }
-
-  async authenticate(password: string, user: User): Promise<boolean> {
-    return bcrypt.compare(password, user.passwordDigest);
+  async login(user: any) {
+    Logger.log(JSON.stringify(user));
+    const payload = { email: user.email, username: user.name, sub: user.id };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
   }
 }

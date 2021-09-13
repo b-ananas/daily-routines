@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { RoutineService } from './routine.service';
@@ -14,6 +15,7 @@ import {
   Routine as RoutineModel,
   Activity as ActivityModel,
 } from '@prisma/client';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
 
 @Controller('routine')
 export class RoutineController {
@@ -22,6 +24,7 @@ export class RoutineController {
     private readonly routineService: RoutineService,
   ) {}
 
+  @UseGuards(JwtAuthGuard) //todo: use jwt authorization to search only for routines of current user
   @Get('/all')
   async getActiveRoutines(): Promise<RoutineModel[]> {
     return this.routineService.routines({
