@@ -16,8 +16,6 @@ import {
 import { User as UserModel } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
-import * as cookieParser from 'cookie-parser';
-import { Response } from 'express';
 import { LocalAuthGuard } from 'src/auth/local.guard';
 
 @Controller('user')
