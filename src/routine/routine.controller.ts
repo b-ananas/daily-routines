@@ -30,7 +30,6 @@ export class RoutineController {
     private readonly routineService: RoutineService,
   ) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('/all')
   async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
     return this.routineService.routines({
