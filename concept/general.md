@@ -23,4 +23,4 @@ Going partying
 Visiting new places
 
 
-
+For each of your routines you will be able to see a habit tracker with data regarding your success rate - both for an routine as a whole, as well as for specific activities that create the routine
