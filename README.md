@@ -9,7 +9,7 @@ There are two ways of running this application: locally and via docker. For deve
 2. Execute npm install ot install all the dependencies
 3. Create DB in PostgreSQL
 4. Export proper variables in `.env` file. Use `.env.example` as an example
-5. Execute npx `prisma migrate deploy`
+5. Execute `npx prisma migrate deploy`
 6. Run app with `npm run start`
 
 

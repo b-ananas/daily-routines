@@ -1,11 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User, Prisma } from '@prisma/client';
+// const jwt = require('jsonwebtoken');
+import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
 
+export type UserReturnType = {
+  name: string;
+  email: string;
+};
+export type UserRegisterType = {
+  name: string;
+  email: string;
+  password: string;
+};
+export type UserLoginType = { email: string; password: string };
+
+type UserCreateInput = {
+  email: string;
+  name: string;
+  password: string;
+};
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  private readonly jwt_secret: string;
+  private readonly jwt_lifespan: number;
+  constructor(private prisma: PrismaService) {
+    this.jwt_secret = process.env['JWT_SECRET_KEY'];
+    this.jwt_lifespan = 600;
+  }
 
+  //get single user
   async user(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<User | null> {
@@ -14,6 +39,7 @@ export class UserService {
     });
   }
 
+  //get all users
   async users(params: {
     skip?: number;
     take?: number;
@@ -31,9 +57,16 @@ export class UserService {
     });
   }
 
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+  async createUser(data: UserRegisterType): Promise<User> {
+    const { email, name, password } = data;
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     return this.prisma.user.create({
-      data,
+      data: {
+        name,
+        email,
+        passwordDigest: hashedPassword,
+      },
     });
   }
 

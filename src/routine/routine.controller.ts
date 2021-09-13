@@ -6,6 +6,11 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
+  Request,
+  Logger,
+  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { RoutineService } from './routine.service';
@@ -14,7 +19,10 @@ import {
   Routine as RoutineModel,
   Activity as ActivityModel,
 } from '@prisma/client';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { RoutineGuard } from './routine.guard';
 
+@UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
 export class RoutineController {
   constructor(
@@ -23,13 +31,13 @@ export class RoutineController {
   ) {}
 
   @Get('/all')
-  async getActiveRoutines(): Promise<RoutineModel[]> {
+  async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
     return this.routineService.routines({
-      where: { active: true },
+      where: { active: true, ownerId: req.user.userId },
     });
   }
 
-  @Post('')
+  @Post('') //todo: retrieve author email from jwt
   async createRoutine(
     @Body()
     routineData: {
@@ -52,17 +60,27 @@ export class RoutineController {
     });
   }
 
+  @UseGuards(RoutineGuard)
   @Get('/:id')
-  async getRoutineById(@Param('id') id: string): Promise<RoutineModel> {
-    return this.routineService.routine({ id: Number(id) });
+  async getRoutineById(
+    @Request() req,
+    @Param('id') id: string,
+  ): Promise<RoutineModel> {
+    return this.routineService.routine({
+      id: Number(id),
+    });
   }
-  @Get('/:id/activities')
+
+  @UseGuards(RoutineGuard)
+  @Get('/:id/activities') //todo: check
   async getRoutineActivitiesById(
     @Param('id') id: string,
   ): Promise<ActivityModel[]> {
     return this.routineService.routineActivities({ id: Number(id) });
   }
-  @Put('/:id')
+
+  @UseGuards(RoutineGuard)
+  @Put('/:id') //todo: check
   async addRoutine(@Param('id') id: string): Promise<RoutineModel> {
     return this.routineService.updateRoutine({
       where: { id: Number(id) },
@@ -70,7 +88,8 @@ export class RoutineController {
     });
   }
 
-  @Delete('/:id')
+  @UseGuards(RoutineGuard)
+  @Delete('/:id') //todo: check
   async deleteRoutine(@Param('id') id: string): Promise<RoutineModel> {
     return this.routineService.deleteRoutine({ id: Number(id) });
   }
