@@ -1,0 +1,1 @@
+The system will ask users about their day in a way that will encourage them to think proper things through. In the evening it may ask about some nice things that heppened during the day, and in the morning it may ask you about plans for the day
