@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { UserLoginType, UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../prisma.service';
 
 import * as bcrypt from 'bcrypt';
 

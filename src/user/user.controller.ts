@@ -12,7 +12,7 @@ import {
   UserRegisterType,
   UserReturnType,
   UserService,
-} from 'src/user/user.service';
+} from './user.service';
 import { User as UserModel } from '@prisma/client';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
