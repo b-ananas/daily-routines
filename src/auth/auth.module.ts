@@ -1,12 +1,10 @@
-import { forwardRef, Logger, Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { UserModule } from '../user/user.module';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt.guard';
 import { JwtStrategy } from './jwt.strategy';
-// import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 
 @Module({
@@ -15,10 +13,10 @@ import { LocalStrategy } from './local.strategy';
     PassportModule,
     JwtModule.register({
       secret: process.env['JWT_SECRET_KEY'],
-      signOptions: { expiresIn: '600s' }, //todo: change to 60s
+      signOptions: { expiresIn: `${process.env['JWT_EXPIRATION_TIME']}s` },
     }),
   ],
   providers: [AuthService, PrismaService, LocalStrategy, JwtStrategy],
-  exports: [AuthService /*JwtAuthGuard*/],
+  exports: [AuthService],
 })
 export class AuthModule {}

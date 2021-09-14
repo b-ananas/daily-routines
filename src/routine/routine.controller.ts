@@ -12,14 +12,14 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { RoutineService } from './routine.service';
 
 import {
   Routine as RoutineModel,
   Activity as ActivityModel,
 } from '@prisma/client';
-import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
 
 @UseGuards(JwtAuthGuard) //sets req.user
