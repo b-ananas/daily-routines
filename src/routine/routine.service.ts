@@ -33,7 +33,7 @@ export class RoutineService {
     take?: number;
     cursor?: Prisma.RoutineWhereUniqueInput;
     where?: Prisma.RoutineWhereInput;
-    orderBy?: Prisma.RoutineOrderByInput;
+    orderBy?: any;
   }): Promise<Routine[]> {
     const { skip, take, cursor, where, orderBy } = params;
     return this.prisma.routine.findMany({

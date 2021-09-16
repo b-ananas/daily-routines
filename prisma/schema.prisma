@@ -16,7 +16,6 @@ model User {
   name     String?
   passwordDigest String
   routines Routine[]
-  tokens   Token[]
 }
 
 model Routine {
@@ -24,7 +23,7 @@ model Routine {
   title   String
   desc    String?
   active  Boolean? @default(true)
-  owner   User?    @relation(fields: [ownerId], references: [id])
+  owner   User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId Int?
   activities Activity[] 
 }
@@ -32,16 +31,6 @@ model Routine {
 model Activity {
   id      Int      @id @default(autoincrement())
   content String
-  routine Routine @relation(fields: [routineId], references: [id])
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
   routineId Int
-}
-model Token {
-  id         Int       @id @default(autoincrement())
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  valid      Boolean   @default(true)
-  content    String
- 
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
 }

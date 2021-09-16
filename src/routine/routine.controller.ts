@@ -25,10 +25,7 @@ import { RoutineGuard } from './routine.guard';
 @UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
 export class RoutineController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly routineService: RoutineService,
-  ) {}
+  constructor(private readonly routineService: RoutineService) {}
 
   @Get('/all')
   async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
