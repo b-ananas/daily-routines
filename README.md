@@ -21,3 +21,12 @@ Generation of migration files from inside docker is discouraged. It is way easie
 ```npx prisma migrate dev```
 It shouldn't be that big of a deal in `stg` and `prod`, as migration files are already generated and only have to be executed.
 In some cases though, applying migrations with `prisma migrate deploy` manually may be neccesary. 
+
+# Tests
+## General
+I decided to give up unit testing for now as this would be probably too time consuming for a self study project like this.
+The goal of the tests is to check if the entire app works rather than testing every single component
+
+## Database usage
+Tests do depend on database. It would be best if i prepare testing scripts that migrate schema to a test database and then drop it afterwards
+For now there is no distinction between dev and test db.
