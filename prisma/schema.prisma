@@ -11,26 +11,36 @@ generator client {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  name     String?
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  name           String?
   passwordDigest String
-  routines Routine[]
+  routines       Routine[]
 }
 
 model Routine {
-  id      Int      @id @default(autoincrement())
-  title   String
-  desc    String?
-  active  Boolean? @default(true)
-  owner   User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId Int?
-  activities Activity[] 
+  id             Int         @id @default(autoincrement())
+  title          String
+  desc           String?
+  active         Boolean?    @default(true)
+  owner          User?       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId        Int?
+  activities     Activity[]
+  type           RoutineType @default(INACTIVE)
+  reminderString String? //cron-like syntax
 }
 
 model Activity {
-  id      Int      @id @default(autoincrement())
-  content String
-  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  content   String
+  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
   routineId Int
+}
+
+enum RoutineType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  INACTIVE
+  CUSTOM
 }

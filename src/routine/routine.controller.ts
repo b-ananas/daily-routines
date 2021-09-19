@@ -21,11 +21,15 @@ import {
 } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
+import { ReminderService } from 'src/reminder/reminder.service';
 
 @UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
 export class RoutineController {
-  constructor(private readonly routineService: RoutineService) {}
+  constructor(
+    private routineService: RoutineService,
+    private reminderService: ReminderService,
+  ) {}
 
   @Get('/all')
   async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
@@ -43,9 +47,9 @@ export class RoutineController {
       authorEmail: string;
       activities: { content: string };
     },
-  ): Promise<RoutineModel> {
+  ) {
     const { title, desc, authorEmail, activities } = routineData;
-    return this.routineService.createRoutine({
+    const routine = await this.routineService.createRoutine({
       title,
       desc,
       owner: {
@@ -55,6 +59,11 @@ export class RoutineController {
         create: activities,
       },
     });
+    await this.reminderService.scheduleDailyReminder(
+      routine.ownerId,
+      routine.id,
+    );
+    return routine;
   }
 
   @UseGuards(RoutineGuard)
