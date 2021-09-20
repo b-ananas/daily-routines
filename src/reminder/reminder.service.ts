@@ -61,9 +61,70 @@ export class ReminderService implements OnApplicationBootstrap {
       );
     }
     const cronString = this.schedulerService.getCronString(
-      '*', //minute.toString(),
-      '*', //hour.toString(),
+      minute.toString(),
+      hour.toString(),
       '*',
+      '*',
+      '*',
+    );
+    this.scheduleReminder(userId, routineId, cronString);
+  }
+  async scheduleWeeklyRoutine(
+    userId: number,
+    routineId: number,
+    dayOfWeek = 1, //monday
+    hour = 9,
+    minute = 0,
+  ) {
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      throw new InternalServerErrorException(
+        'Time',
+        `There is no such hour: ${hour}:${minute}`,
+      );
+    }
+
+    if (dayOfWeek < 0 || dayOfWeek > 6) {
+      throw new InternalServerErrorException(
+        'Time',
+        `Day of week should be between 0 (sunday) and 6 (saturday). Received value: ${dayOfWeek}`,
+      );
+    }
+
+    const cronString = this.schedulerService.getCronString(
+      minute.toString(),
+      hour.toString(),
+      '*',
+      '*',
+      dayOfWeek.toString(),
+    );
+    this.scheduleReminder(userId, routineId, cronString);
+  }
+
+  async scheduleMonthlyRoutine(
+    userId: number,
+    routineId: number,
+    dayOfMonth = 1,
+    hour = 9,
+    minute = 0,
+  ) {
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      throw new InternalServerErrorException(
+        'Time',
+        `There is no such hour: ${hour}:${minute}`,
+      );
+    }
+
+    if (dayOfMonth < 1 || dayOfMonth > 31) {
+      throw new InternalServerErrorException(
+        'Time',
+        `Day of month should be between 1 and 31. Received value: ${dayOfMonth}`,
+      );
+    }
+
+    const cronString = this.schedulerService.getCronString(
+      minute.toString(),
+      hour.toString(),
+      dayOfMonth.toString(),
       '*',
       '*',
     );
