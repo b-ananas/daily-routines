@@ -1,17 +1,28 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
+import { Routine } from '@prisma/client';
 import { RoutineService } from 'src/routine/routine.service';
 import { SchedulerService } from 'src/scheduler/scheduler.service';
 import { UserService } from 'src/user/user.service';
 
 @Injectable()
-export class ReminderService {
-  //send reminder immediately
+export class ReminderService implements OnApplicationBootstrap {
   constructor(
     private schedulerService: SchedulerService,
     private routineService: RoutineService,
     private userService: UserService,
   ) {}
+  onApplicationBootstrap() {
+    this.scheduleAllRemindersFromDatabase();
+  }
+
+  //send reminder immediately
   async sendReminder(userId: number, content: string) {
+    //todo: replace with sending reminder logic
     const user = await this.userService.user({ id: userId });
     Logger.log(
       `
@@ -21,39 +32,81 @@ export class ReminderService {
       `,
     );
   }
-  async scheduleDailyReminder(userId: number, routineId: number) {
-    const user = await this.userService.user({ id: userId });
+  async scheduleReminder(
+    userId: number,
+    routineId: number,
+    cronString: string,
+  ) {
     let routine = await this.routineService.routine({ id: routineId });
-    //todo: change to real interval
     if (!routine.reminderString) {
-      Logger.log('Changing reminder string');
       routine = await this.routineService.updateRoutine({
         where: { id: routine.id },
         data: {
-          reminderString: this.schedulerService.getCronString(
-            '*',
-            '*',
-            '*',
-            '*',
-            '*',
-          ),
+          reminderString: cronString,
         },
       });
-      Logger.log(`After changing cron string: ${JSON.stringify(routine)}`);
     }
-    Logger.log(`Reminder cron string: ${routine.reminderString}`);
-    this.schedulerService.scheduleJob(
-      `Daily Reminder - routine ${routine.title} for user ${user.email}`,
-      routine.reminderString,
-      () => {
-        return this.sendReminder(
-          userId,
-          `Remember about your habit - ${routine.title}`,
-        );
-      },
+    this.addReminderToCron(routine);
+  }
+  async scheduleDailyReminder(
+    userId: number,
+    routineId: number,
+    hour = 9,
+    minute = 0,
+  ) {
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      throw new InternalServerErrorException(
+        'Time',
+        `There is no such hour: ${hour}:${minute}`,
+      );
+    }
+    const cronString = this.schedulerService.getCronString(
+      '*', //minute.toString(),
+      '*', //hour.toString(),
+      '*',
+      '*',
+      '*',
     );
+    this.scheduleReminder(userId, routineId, cronString);
   }
 
-  //method called after every restart. Loads all reminders from DB and starts sending them at proper time
-  async scheduleAllRemindersFromDatabase() {}
+  //method called at app startup
+  // Loads all reminders from DB and starts sending them at proper time
+  // it may stop the entire app for a few minutes - maybe move this logic to a lambda?
+  async scheduleAllRemindersFromDatabase() {
+    const allRoutines = await this.routineService.routines({
+      where: {
+        reminderString: {
+          not: null,
+        },
+      },
+    });
+    allRoutines.forEach((routine) => {
+      this.addReminderToCron(routine);
+    });
+  }
+
+  private addReminderToCron(routine: Routine) {
+    try {
+      this.schedulerService.scheduleJob(
+        `Daily Reminder - routine ${routine.title} for user ${routine.ownerId}`,
+        routine.reminderString,
+        () => {
+          return this.sendReminder(
+            routine.ownerId,
+            `Remember about your habit - ${routine.title}`,
+          );
+        },
+      );
+    } catch (error) {
+      Logger.warn(
+        `Error occures while trying to add reminder for routine ${routine.id} to cron
+        ${error}`,
+      );
+      return;
+    }
+    Logger.log(
+      `Successfully added reminder for routine ${routine.title} of user ${routine.ownerId} to cron`,
+    );
+  }
 }
