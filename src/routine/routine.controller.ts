@@ -11,6 +11,8 @@ import {
   Logger,
   UnauthorizedException,
   NotFoundException,
+  InternalServerErrorException,
+  NotImplementedException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { RoutineService } from './routine.service';
@@ -18,10 +20,12 @@ import { RoutineService } from './routine.service';
 import {
   Routine as RoutineModel,
   Activity as ActivityModel,
+  RoutineType,
 } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
 import { ReminderService } from 'src/reminder/reminder.service';
+import { LoDashImplicitNumberArrayWrapper } from 'lodash';
 
 @UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
@@ -46,9 +50,16 @@ export class RoutineController {
       desc?: string;
       authorEmail: string;
       activities: { content: string };
+      type: string;
+      dayOfMonth?: number;
+      dayOfWeek?: number;
+      hour?: number;
+      minute?: number;
     },
   ) {
     const { title, desc, authorEmail, activities } = routineData;
+    const type = RoutineType[routineData.type.toUpperCase()];
+
     const routine = await this.routineService.createRoutine({
       title,
       desc,
@@ -58,11 +69,40 @@ export class RoutineController {
       activities: {
         create: activities,
       },
+      type,
     });
-    await this.reminderService.scheduleDailyReminder(
-      routine.ownerId,
-      routine.id,
-    );
+    switch (type) {
+      case RoutineType.DAILY:
+        await this.reminderService.scheduleDailyReminder(
+          routine.ownerId,
+          routine.id,
+          routineData.hour,
+          routineData.minute,
+        );
+        break;
+      case RoutineType.WEEKLY:
+        await this.reminderService.scheduleWeeklyRoutine(
+          routine.ownerId,
+          routine.id,
+          routineData.dayOfWeek,
+          routineData.hour,
+          routineData.minute,
+        );
+        break;
+      case RoutineType.MONTHLY:
+        await this.reminderService.scheduleMonthlyRoutine(
+          routine.ownerId,
+          routine.id,
+          routineData.dayOfMonth,
+          routineData.hour,
+          routineData.minute,
+        );
+        break;
+      case RoutineType.CUSTOM:
+        throw new NotImplementedException();
+        break;
+    }
+
     return routine;
   }
 

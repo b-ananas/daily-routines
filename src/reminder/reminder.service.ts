@@ -4,7 +4,7 @@ import {
   Logger,
   OnApplicationBootstrap,
 } from '@nestjs/common';
-import { Routine } from '@prisma/client';
+import { Routine, RoutineType } from '@prisma/client';
 import { RoutineService } from 'src/routine/routine.service';
 import { SchedulerService } from 'src/scheduler/scheduler.service';
 import { UserService } from 'src/user/user.service';
@@ -140,6 +140,9 @@ export class ReminderService implements OnApplicationBootstrap {
         reminderString: {
           not: null,
         },
+        type: {
+          not: RoutineType['INACTIVE'],
+        },
       },
     });
     allRoutines.forEach((routine) => {
@@ -148,14 +151,20 @@ export class ReminderService implements OnApplicationBootstrap {
   }
 
   private addReminderToCron(routine: Routine) {
+    if (routine.type == RoutineType['INACTIVE']) {
+      Logger.warn(
+        `Failed to add reminder for routine ${routine.id}. Cannot add reminders to INACTIVE routine!`,
+      );
+      return;
+    }
     try {
       this.schedulerService.scheduleJob(
-        `Daily Reminder - routine ${routine.title} for user ${routine.ownerId}`,
+        `${routine.type} Reminder - routine ${routine.title} for user ${routine.ownerId}`,
         routine.reminderString,
         () => {
           return this.sendReminder(
             routine.ownerId,
-            `Remember about your habit - ${routine.title}`,
+            `Remember about your ${routine.type} habit - ${routine.title}`,
           );
         },
       );
@@ -167,7 +176,7 @@ export class ReminderService implements OnApplicationBootstrap {
       return;
     }
     Logger.log(
-      `Successfully added reminder for routine ${routine.title} of user ${routine.ownerId} to cron`,
+      `Successfully added reminder for ${routine.type} routine ${routine.title} of user ${routine.ownerId} to cron: ${routine.reminderString}`,
     );
   }
 }
