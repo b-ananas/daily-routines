@@ -8,24 +8,25 @@ import {
   Put,
   UseGuards,
   Request,
-  Logger,
-  UnauthorizedException,
-  NotFoundException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
 import { RoutineService } from './routine.service';
 
 import {
   Routine as RoutineModel,
   Activity as ActivityModel,
+  RoutineType,
 } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
+import { ReminderService } from 'src/reminder/reminder.service';
 
 @UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
 export class RoutineController {
-  constructor(private readonly routineService: RoutineService) {}
+  constructor(
+    private routineService: RoutineService,
+    private reminderService: ReminderService,
+  ) {}
 
   @Get('/all')
   async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
@@ -42,10 +43,18 @@ export class RoutineController {
       desc?: string;
       authorEmail: string;
       activities: { content: string };
+      type: string;
+      dayOfMonth?: number;
+      dayOfWeek?: number;
+      hour?: number;
+      minute?: number;
+      month?: number;
     },
-  ): Promise<RoutineModel> {
+  ) {
     const { title, desc, authorEmail, activities } = routineData;
-    return this.routineService.createRoutine({
+    const type = RoutineType[routineData.type.toUpperCase()];
+
+    const routine = await this.routineService.createRoutine({
       title,
       desc,
       owner: {
@@ -54,7 +63,54 @@ export class RoutineController {
       activities: {
         create: activities,
       },
+      type,
     });
+    switch (type) {
+      case RoutineType.DAILY:
+        await this.reminderService.scheduleDailyReminder(
+          routine.ownerId,
+          routine.id,
+          routineData.hour,
+          routineData.minute,
+        );
+        break;
+      case RoutineType.WEEKLY:
+        await this.reminderService.scheduleWeeklyRoutine(
+          routine.ownerId,
+          routine.id,
+          routineData.dayOfWeek,
+          routineData.hour,
+          routineData.minute,
+        );
+        break;
+      case RoutineType.MONTHLY:
+        await this.reminderService.scheduleMonthlyRoutine(
+          routine.ownerId,
+          routine.id,
+          routineData.dayOfMonth,
+          routineData.hour,
+          routineData.minute,
+        );
+        break;
+      case RoutineType.CUSTOM:
+        /* eslint-disable */
+        await this.reminderService.scheduleReminder(
+          routine.id,
+          [
+
+            routineData.minute == undefined? '*' : routineData.minute.toString(),
+            routineData.hour == undefined? '*' : routineData.hour.toString(),
+            routineData.dayOfMonth == undefined? '*' : routineData.dayOfMonth.toString(),
+            routineData.month == undefined? '*' : routineData.month.toString(),
+            routineData.dayOfWeek == undefined? '*' : routineData.dayOfWeek.toString(),
+          ]
+            .reduce((prev, curr) => (prev += ' ' + curr)),
+        );
+        /* eslint-enable */
+        break;
+    }
+
+    return routine;
   }
 
   @UseGuards(RoutineGuard)
@@ -76,6 +132,7 @@ export class RoutineController {
     return this.routineService.routineActivities({ id: Number(id) });
   }
 
+  //todo: this endpoint has little sense. Make it update routine, not just activate it
   @UseGuards(RoutineGuard)
   @Put('/:id') //todo: check
   async addRoutine(@Param('id') id: string): Promise<RoutineModel> {
@@ -88,6 +145,9 @@ export class RoutineController {
   @UseGuards(RoutineGuard)
   @Delete('/:id') //todo: check
   async deleteRoutine(@Param('id') id: string): Promise<RoutineModel> {
+    this.reminderService.removeReminderFromCron(
+      await this.routineService.routine({ id: Number(id) }),
+    );
     return this.routineService.deleteRoutine({ id: Number(id) });
   }
 }

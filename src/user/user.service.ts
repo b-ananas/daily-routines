@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User, Prisma } from '@prisma/client';
-// const jwt = require('jsonwebtoken');
-import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 
 export type UserReturnType = {

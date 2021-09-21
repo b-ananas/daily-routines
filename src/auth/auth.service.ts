@@ -1,7 +1,6 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { UserLoginType, UserService } from '../user/user.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma.service';
 
 import * as bcrypt from 'bcrypt';
 
@@ -10,12 +9,12 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private userService: UserService,
-    private prisma: PrismaService,
   ) {}
   async authenticate(userEmail: string, password: string): Promise<any> {
     const user = await this.userService.user({ email: userEmail });
     if (bcrypt.compare(password, user.passwordDigest)) {
       Logger.log(`Password authentication for email ${userEmail} successful!`);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordDigest, ...answ } = user;
       return answ;
     } else {
