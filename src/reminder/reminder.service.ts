@@ -32,11 +32,7 @@ export class ReminderService implements OnApplicationBootstrap {
       `,
     );
   }
-  async scheduleReminder(
-    userId: number,
-    routineId: number,
-    cronString: string,
-  ) {
+  async scheduleReminder(routineId: number, cronString: string) {
     let routine = await this.routineService.routine({ id: routineId });
     if (!routine.reminderString) {
       routine = await this.routineService.updateRoutine({
@@ -47,6 +43,18 @@ export class ReminderService implements OnApplicationBootstrap {
       });
     }
     this.addReminderToCron(routine);
+  }
+  async unscheduleReminder(routineId: number) {
+    let routine = await this.routineService.routine({ id: routineId });
+    if (routine.reminderString) {
+      routine = await this.routineService.updateRoutine({
+        where: { id: routine.id },
+        data: {
+          reminderString: null,
+        },
+      });
+    }
+    this.removeReminderFromCron(routine);
   }
   async scheduleDailyReminder(
     userId: number,
@@ -67,7 +75,7 @@ export class ReminderService implements OnApplicationBootstrap {
       '*',
       '*',
     );
-    this.scheduleReminder(userId, routineId, cronString);
+    this.scheduleReminder(routineId, cronString);
   }
   async scheduleWeeklyRoutine(
     userId: number,
@@ -97,7 +105,7 @@ export class ReminderService implements OnApplicationBootstrap {
       '*',
       dayOfWeek.toString(),
     );
-    this.scheduleReminder(userId, routineId, cronString);
+    this.scheduleReminder(routineId, cronString);
   }
 
   async scheduleMonthlyRoutine(
@@ -128,7 +136,7 @@ export class ReminderService implements OnApplicationBootstrap {
       '*',
       '*',
     );
-    this.scheduleReminder(userId, routineId, cronString);
+    this.scheduleReminder(routineId, cronString);
   }
 
   //method called at app startup
@@ -159,7 +167,7 @@ export class ReminderService implements OnApplicationBootstrap {
     }
     try {
       this.schedulerService.scheduleJob(
-        `${routine.type} Reminder - routine ${routine.title} for user ${routine.ownerId}`,
+        this.getCronJobName(routine),
         routine.reminderString,
         () => {
           return this.sendReminder(
@@ -178,5 +186,14 @@ export class ReminderService implements OnApplicationBootstrap {
     Logger.log(
       `Successfully added reminder for ${routine.type} routine ${routine.title} of user ${routine.ownerId} to cron: ${routine.reminderString}`,
     );
+  }
+  removeReminderFromCron(routine: Routine) {
+    const name = this.getCronJobName(routine);
+    Logger.log(`Removing reminder "${name}" from cron`);
+    this.schedulerService.unscheduleJob(this.getCronJobName(routine));
+  }
+
+  getCronJobName(routine: Routine) {
+    return `${routine.id}`;
   }
 }

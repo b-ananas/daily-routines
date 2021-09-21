@@ -8,13 +8,8 @@ import {
   Put,
   UseGuards,
   Request,
-  Logger,
-  UnauthorizedException,
-  NotFoundException,
-  InternalServerErrorException,
   NotImplementedException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
 import { RoutineService } from './routine.service';
 
 import {
@@ -25,7 +20,6 @@ import {
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
 import { ReminderService } from 'src/reminder/reminder.service';
-import { LoDashImplicitNumberArrayWrapper } from 'lodash';
 
 @UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
@@ -55,6 +49,7 @@ export class RoutineController {
       dayOfWeek?: number;
       hour?: number;
       minute?: number;
+      month?: number;
     },
   ) {
     const { title, desc, authorEmail, activities } = routineData;
@@ -99,7 +94,20 @@ export class RoutineController {
         );
         break;
       case RoutineType.CUSTOM:
-        throw new NotImplementedException();
+        /* eslint-disable */
+        await this.reminderService.scheduleReminder(
+          routine.id,
+          [
+
+            routineData.minute == undefined? '*' : routineData.minute.toString(),
+            routineData.hour == undefined? '*' : routineData.hour.toString(),
+            routineData.dayOfMonth == undefined? '*' : routineData.dayOfMonth.toString(),
+            routineData.month == undefined? '*' : routineData.month.toString(),
+            routineData.dayOfWeek == undefined? '*' : routineData.dayOfWeek.toString(),
+          ]
+            .reduce((prev, curr) => (prev += ' ' + curr)),
+        );
+        /* eslint-enable */
         break;
     }
 
@@ -125,6 +133,7 @@ export class RoutineController {
     return this.routineService.routineActivities({ id: Number(id) });
   }
 
+  //todo: this endpoint has little sense. Make it update routine, not just activate it
   @UseGuards(RoutineGuard)
   @Put('/:id') //todo: check
   async addRoutine(@Param('id') id: string): Promise<RoutineModel> {
@@ -137,6 +146,9 @@ export class RoutineController {
   @UseGuards(RoutineGuard)
   @Delete('/:id') //todo: check
   async deleteRoutine(@Param('id') id: string): Promise<RoutineModel> {
+    this.reminderService.removeReminderFromCron(
+      await this.routineService.routine({ id: Number(id) }),
+    );
     return this.routineService.deleteRoutine({ id: Number(id) });
   }
 }

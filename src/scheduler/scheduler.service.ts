@@ -24,4 +24,8 @@ export class SchedulerService {
     this.schedulerRegistry.addCronJob(name, job);
     job.start();
   }
+
+  public unscheduleJob(name: string) {
+    this.schedulerRegistry.deleteCronJob(name);
+  }
 }
