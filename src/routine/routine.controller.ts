@@ -8,7 +8,6 @@ import {
   Put,
   UseGuards,
   Request,
-  NotImplementedException,
 } from '@nestjs/common';
 import { RoutineService } from './routine.service';
 

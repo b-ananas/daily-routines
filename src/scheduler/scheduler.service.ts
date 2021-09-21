@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
-import { RoutineService } from 'src/routine/routine.service';
 
 @Injectable()
 export class SchedulerService {
-  constructor(
-    private schedulerRegistry: SchedulerRegistry, // private routineService: RoutineService,
-  ) {}
+  constructor(private schedulerRegistry: SchedulerRegistry) {}
 
   public getCronString(
     minute: string,
