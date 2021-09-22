@@ -1,6 +1,10 @@
 # Contents
 The goal of this document is to explain basic concepts regarding this app and walk you through app setup.
 
+# Short description 
+## Notice: this repository is only the backend part of the project
+Daily Routines is a system similiar to a habit tracker. Instead of habits, it allows you to track habits and entire routines. It collects statistics about your habits and lets you track your progress easily.
+
 # Setup
 There are two ways of running this application: locally and via docker. For development purpose local setup is more convinient, though it requires more work to get up and running. On the other hand, using docker is crucial for deploying to stg and production environments, and should not be neglected.
 
