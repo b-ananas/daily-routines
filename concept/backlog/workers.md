@@ -1,0 +1,3 @@
+Logic responsible for sending email and failing routines can be moved to separate workers if there is such need. To do so we will be using Bull package. It requires Redis - add it in docker-compose. 
+
+I plan to implement it after i have a working prototype of the entire system. Right now scheduling jobs in cron is perfectly fine, as it is easier to test and maintain, and scalability is not an issue right now
