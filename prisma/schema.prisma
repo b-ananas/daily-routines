@@ -19,22 +19,24 @@ model User {
 }
 
 model Routine {
-  id             Int         @id @default(autoincrement())
+  id             Int               @id @default(autoincrement())
   title          String
   desc           String?
-  active         Boolean?    @default(true)
-  owner          User?       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  active         Boolean?          @default(true)
+  owner          User?             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId        Int?
   activities     Activity[]
-  type           RoutineType @default(INACTIVE)
+  instances      RoutineInstance[]
+  type           RoutineType       @default(INACTIVE)
   reminderString String? //cron-like syntax
 }
 
 model Activity {
-  id        Int     @id @default(autoincrement())
+  id        Int                @id @default(autoincrement())
   content   String
-  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  routine   Routine            @relation(fields: [routineId], references: [id], onDelete: Cascade)
   routineId Int
+  instances ActivityInstance[]
 }
 
 enum RoutineType {
@@ -43,4 +45,30 @@ enum RoutineType {
   MONTHLY
   INACTIVE
   CUSTOM
+}
+
+model RoutineInstance {
+  id                Int                @id @default(autoincrement())
+  routineId         Int
+  routine           Routine            @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  start             DateTime
+  end               DateTime
+  activityInstances ActivityInstance[]
+  succeded          Status
+}
+
+model ActivityInstance {
+  id                Int             @id @default(autoincrement())
+  activityId        Int
+  routineInstanceId Int
+  activity          Activity        @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  routineInstance   RoutineInstance @relation(fields: [routineInstanceId], references: [id], onDelete: Cascade)
+  succeded          Status
+}
+
+enum Status {
+  SUCCEDED
+  IN_PROGRESS
+  FAILED
+  TEMPORARILY_DISABLED
 }
