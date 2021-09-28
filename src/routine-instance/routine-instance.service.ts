@@ -65,9 +65,10 @@ export class RoutineInstanceService {
     });
   }
 
-  public completeRoutine(routineInstance: RoutineInstance) {
-    this.prisma.routineInstance.update({
-      where: { id: routineInstance.id },
+  public async completeRoutine(routineInstanceId: number) {
+    //go by id - now we aint saving in db
+    await this.prisma.routineInstance.update({
+      where: { id: routineInstanceId },
       data: { succeded: Status.SUCCEDED },
     });
   }
@@ -89,7 +90,7 @@ export class RoutineInstanceService {
         )
         .reduce((succeded, nextSucceded) => (succeded &&= nextSucceded))
     ) {
-      this.completeRoutine(routineInstance);
+      this.completeRoutine(routineInstance.id);
     }
   }
 
@@ -98,5 +99,24 @@ export class RoutineInstanceService {
       instance.succeded == Status.SUCCEDED ||
       instance.succeded == Status.TEMPORARILY_DISABLED
     );
+  }
+  async getSuccessRate(
+    routineWhereUniqueInput: Prisma.RoutineWhereUniqueInput,
+  ) {
+    const routine = await this.prisma.routine.findUnique({
+      where: routineWhereUniqueInput,
+
+      include: {
+        instances: true,
+      },
+    });
+
+    let sum = 0;
+    routine.instances.forEach((inst) => {
+      if (this.isCompleted(inst)) {
+        sum += 1;
+      }
+    });
+    return sum / routine.instances.length;
   }
 }

@@ -44,6 +44,7 @@ describe('RoutineInstanceService', () => {
   });
 
   it('should create instance of a routine', async () => {
+    //routine is deleted before running the tests, so it is safe not to delete it here
     routine = (await routineService.createRoutine({
       title: 'test',
       owner: {
@@ -72,5 +73,57 @@ describe('RoutineInstanceService', () => {
     const routineInstance = (await service.getRoutineInstances(routine.id))[0];
     expect(routineInstance).not.toBeNull();
     expect(routineInstance.activityInstances.length).toEqual(4);
+  });
+
+  it('should return data about success rate', async () => {
+    routine = (await routineService.createRoutine({
+      title: 'test',
+      owner: {
+        connect: {
+          id: user.id,
+        },
+      },
+    })) as any;
+    routine.activities = await routineService.routineActivities({
+      id: routine.id,
+    });
+
+    const instances = [
+      await service.create(
+        routine,
+        new Date('Sept 19, 2021'),
+        new Date('Sept 20, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 20, 2021'),
+        new Date('Sept 21, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 21, 2021'),
+        new Date('Sept 22, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 22, 2021'),
+        new Date('Sept 23, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 23, 2021'),
+        new Date('Sept 24, 2021'),
+      ),
+    ];
+    expect(await service.getSuccessRate({ id: routine.id })).toEqual(0);
+    await service.completeRoutine(instances[0].id);
+    expect(await service.getSuccessRate({ id: routine.id })).toEqual(
+      1 / instances.length,
+    );
+    await service.completeRoutine(instances[1].id);
+    await service.completeRoutine(instances[2].id);
+    expect(await service.getSuccessRate({ id: routine.id })).toEqual(
+      3 / instances.length,
+    );
   });
 });
