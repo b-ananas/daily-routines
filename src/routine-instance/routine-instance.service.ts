@@ -58,15 +58,34 @@ export class RoutineInstanceService {
       data,
     });
   }
-  public getRoutineInstances(routineId: number) {
+
+  public getRoutinesStartingAt(start: Date, routineId?: number) {
+    if (routineId) {
+      return this.prisma.routineInstance.findMany({
+        where: {
+          routineId,
+          start,
+        },
+      });
+    } else {
+      return this.prisma.routineInstance.findMany({
+        where: {
+          start,
+        },
+      });
+    }
+  }
+  public getRoutineInstances(routineId: number, order?: 'asc' | 'desc') {
     return this.prisma.routineInstance.findMany({
+      orderBy: { start: order },
       where: { routineId },
-      include: { activityInstances: true },
+      include: {
+        activityInstances: true,
+      },
     });
   }
 
   public async completeRoutine(routineInstanceId: number) {
-    //go by id - now we aint saving in db
     await this.prisma.routineInstance.update({
       where: { id: routineInstanceId },
       data: { succeded: Status.SUCCEDED },
@@ -100,6 +119,7 @@ export class RoutineInstanceService {
       instance.succeded == Status.TEMPORARILY_DISABLED
     );
   }
+
   async getSuccessRate(
     routineWhereUniqueInput: Prisma.RoutineWhereUniqueInput,
   ) {

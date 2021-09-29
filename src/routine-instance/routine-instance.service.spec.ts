@@ -126,4 +126,57 @@ describe('RoutineInstanceService', () => {
       3 / instances.length,
     );
   });
+
+  it('sort returned instances', async () => {
+    routine = (await routineService.createRoutine({
+      title: 'test',
+      owner: {
+        connect: {
+          id: user.id,
+        },
+      },
+    })) as any;
+    routine.activities = await routineService.routineActivities({
+      id: routine.id,
+    });
+
+    const instances = [
+      await service.create(
+        routine,
+        new Date('Sept 21, 2021'),
+        new Date('Sept 22, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 19, 2021'),
+        new Date('Sept 20, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 23, 2021'),
+        new Date('Sept 24, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 20, 2021'),
+        new Date('Sept 21, 2021'),
+      ),
+      await service.create(
+        routine,
+        new Date('Sept 22, 2021'),
+        new Date('Sept 23, 2021'),
+      ),
+    ];
+    const returnValue = (
+      await service.getRoutineInstances(routine.id, 'asc')
+    ).map((inst) => {
+      return inst.start;
+    });
+    const expectedValue = instances
+      .map((inst) => {
+        return inst.start;
+      })
+      .sort((date1, date2) => date1.getTime() - date2.getTime());
+    expect(returnValue).toEqual(expectedValue);
+  });
 });
