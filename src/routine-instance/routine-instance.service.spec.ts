@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Activity, Prisma, Routine, RoutineType, User } from '@prisma/client';
 import _ from 'lodash';
@@ -75,7 +76,80 @@ describe('RoutineInstanceService', () => {
     expect(routineInstance.activityInstances.length).toEqual(4);
   });
 
-  it('should return data about success rate', async () => {
+  it('should return data about success rate of activities', async () => {
+    routine = (await routineService.createRoutine({
+      title: 'morning routine',
+      owner: {
+        connect: {
+          id: user.id,
+        },
+      },
+      activities: {
+        createMany: {
+          data: [
+            { content: 'wake up' },
+            { content: 'drink water' },
+            { content: 'floss' },
+            { content: 'drink coffee' },
+            { content: 'meditate' },
+            { content: 'eat breakfast' },
+          ],
+        },
+      },
+    })) as any;
+    routine.activities = await routineService.routineActivities({
+      id: routine.id,
+    });
+
+    await service.create(
+      routine,
+      new Date('Sept 19, 2021'),
+      new Date('Sept 20, 2021'),
+    );
+    await service.create(
+      routine,
+      new Date('Sept 20, 2021'),
+      new Date('Sept 21, 2021'),
+    );
+    await service.create(
+      routine,
+      new Date('Sept 21, 2021'),
+      new Date('Sept 22, 2021'),
+    );
+    await service.create(
+      routine,
+      new Date('Sept 22, 2021'),
+      new Date('Sept 23, 2021'),
+    );
+    await service.create(
+      routine,
+      new Date('Sept 23, 2021'),
+      new Date('Sept 24, 2021'),
+    );
+
+    const instances = await service.getRoutineInstances(routine.id, 'asc');
+    // Logger.log(
+    //   JSON.stringify(await service.getRoutineInstances(routine.id, 'asc')),
+    // );
+    const activityInstances = await service.getActivityInstances(
+      instances[0].activityInstances[0].activityId,
+    );
+    expect(
+      await service.getActivitySuccessRate(activityInstances[0].activityId),
+    ).toEqual(0);
+    await service.completeActivity(activityInstances[0].id);
+
+    expect(
+      await service.getActivitySuccessRate(activityInstances[0].activityId),
+    ).toEqual(1 / activityInstances.length);
+    await service.completeActivity(activityInstances[1].id);
+    await service.completeActivity(activityInstances[2].id);
+    expect(
+      await service.getActivitySuccessRate(activityInstances[0].activityId),
+    ).toEqual(3 / activityInstances.length);
+  });
+
+  it('should return data about success rate of the routine', async () => {
     routine = (await routineService.createRoutine({
       title: 'test',
       owner: {
@@ -115,14 +189,14 @@ describe('RoutineInstanceService', () => {
         new Date('Sept 24, 2021'),
       ),
     ];
-    expect(await service.getSuccessRate({ id: routine.id })).toEqual(0);
+    expect(await service.getRoutineSuccessRate({ id: routine.id })).toEqual(0);
     await service.completeRoutine(instances[0].id);
-    expect(await service.getSuccessRate({ id: routine.id })).toEqual(
+    expect(await service.getRoutineSuccessRate({ id: routine.id })).toEqual(
       1 / instances.length,
     );
     await service.completeRoutine(instances[1].id);
     await service.completeRoutine(instances[2].id);
-    expect(await service.getSuccessRate({ id: routine.id })).toEqual(
+    expect(await service.getRoutineSuccessRate({ id: routine.id })).toEqual(
       3 / instances.length,
     );
   });

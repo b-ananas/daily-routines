@@ -84,6 +84,11 @@ export class RoutineInstanceService {
       },
     });
   }
+  public getActivityInstances(activityId: number) {
+    return this.prisma.activityInstance.findMany({
+      where: { activityId },
+    });
+  }
 
   public async completeRoutine(routineInstanceId: number) {
     await this.prisma.routineInstance.update({
@@ -92,9 +97,9 @@ export class RoutineInstanceService {
     });
   }
 
-  public async completeActivity(activityInstance: ActivityInstance) {
-    await this.prisma.activityInstance.update({
-      where: { id: activityInstance.id },
+  public async completeActivity(activityInstanceId: number) {
+    const activityInstance = await this.prisma.activityInstance.update({
+      where: { id: activityInstanceId },
       data: { succeded: Status.SUCCEDED },
     });
     const routineInstance = await this.prisma.routineInstance.findFirst({
@@ -120,7 +125,7 @@ export class RoutineInstanceService {
     );
   }
 
-  async getSuccessRate(
+  async getRoutineSuccessRate(
     routineWhereUniqueInput: Prisma.RoutineWhereUniqueInput,
   ) {
     const routine = await this.prisma.routine.findUnique({
@@ -138,5 +143,23 @@ export class RoutineInstanceService {
       }
     });
     return sum / routine.instances.length;
+  }
+
+  async getActivitySuccessRate(activityId: number) {
+    const activity = await this.prisma.activity.findUnique({
+      where: { id: activityId },
+
+      include: {
+        instances: true,
+      },
+    });
+
+    let sum = 0;
+    activity.instances.forEach((inst) => {
+      if (this.isCompleted(inst)) {
+        sum += 1;
+      }
+    });
+    return sum / activity.instances.length;
   }
 }
