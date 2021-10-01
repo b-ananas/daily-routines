@@ -125,6 +125,11 @@ export class RoutineInstanceService {
     );
   }
 
+  public getRoutineInstance(routineInstanceId: number) {
+    return this.prisma.routineInstance.findUnique({
+      where: { id: routineInstanceId },
+    });
+  }
   async getRoutineSuccessRate(
     routineWhereUniqueInput: Prisma.RoutineWhereUniqueInput,
   ) {
