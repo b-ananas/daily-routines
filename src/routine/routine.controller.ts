@@ -19,12 +19,14 @@ import {
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
 import { ReminderService } from 'src/reminder/reminder.service';
+import { RoutineInstanceService } from 'src/routine-instance/routine-instance.service';
 
 @UseGuards(JwtAuthGuard) //sets req.user
 @Controller('routine')
 export class RoutineController {
   constructor(
     private routineService: RoutineService,
+    private routineInstanceService: RoutineInstanceService,
     private reminderService: ReminderService,
   ) {}
 
@@ -103,8 +105,8 @@ export class RoutineController {
             routineData.dayOfMonth == undefined? '*' : routineData.dayOfMonth.toString(),
             routineData.month == undefined? '*' : routineData.month.toString(),
             routineData.dayOfWeek == undefined? '*' : routineData.dayOfWeek.toString(),
-          ]
-            .reduce((prev, curr) => (prev += ' ' + curr)),
+          ].reduce((prev, curr) => (prev += ' ' + curr)),
+
         );
         /* eslint-enable */
         break;
@@ -131,6 +133,25 @@ export class RoutineController {
   ): Promise<ActivityModel[]> {
     return this.routineService.routineActivities({ id: Number(id) });
   }
+
+  @UseGuards(RoutineGuard)
+  @Get('/:id/success-rate') //checked
+  async getRoutineSuccessRatesById(@Param('id') id: string) {
+    return this.routineInstanceService.getRoutineSuccessRate({
+      id: Number(id),
+    });
+  }
+
+  @UseGuards(RoutineGuard)
+  @Get('/:id/instances') //checked
+  async getRoutineInstances(@Param('id') id: string) {
+    return this.routineInstanceService.getRoutineInstances(Number(id), 'asc');
+  }
+  // @UseGuards(RoutineGuard)
+  // @Get('/instance/:id') //checked
+  // async getRoutineInstance(@Param('id') id: string) {
+  //   return this.routineInstanceService.getRoutineInstance(Number(id));
+  // }
 
   //todo: this endpoint has little sense. Make it update routine, not just activate it
   @UseGuards(RoutineGuard)
