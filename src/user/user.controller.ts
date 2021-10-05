@@ -11,12 +11,16 @@ import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { LocalAuthGuard } from 'src/auth/local.guard';
 
-@Controller('user')
+@Controller('') //route in routes.ts
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
   ) {}
+  @Get()
+  testUserController() {
+    return 'TEST: UserController';
+  }
 
   @Post('/')
   async signupUser(

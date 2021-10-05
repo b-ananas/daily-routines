@@ -7,9 +7,21 @@ import { RoutineModule } from './routine/routine.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RoutineInstanceModule } from './routine-instance/routine-instance.module';
+import { RouterModule } from 'nest-router';
+import { routes } from './routes';
+import { ActivityModule } from './activity/activity.module';
+import { ActivityInstanceModule } from './activity-instance/activity-instance.module';
 
 @Module({
-  imports: [RoutineModule, UserModule, AuthModule, RoutineInstanceModule],
+  imports: [
+    RouterModule.forRoutes(routes),
+    RoutineModule,
+    UserModule,
+    AuthModule,
+    RoutineInstanceModule,
+    ActivityModule,
+    ActivityInstanceModule,
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService, UserService],
 })

@@ -22,13 +22,18 @@ import { ReminderService } from 'src/reminder/reminder.service';
 import { RoutineInstanceService } from 'src/routine-instance/routine-instance.service';
 
 @UseGuards(JwtAuthGuard) //sets req.user
-@Controller('routine')
+@Controller('') //routes in routes.ts
 export class RoutineController {
   constructor(
     private routineService: RoutineService,
     private routineInstanceService: RoutineInstanceService,
     private reminderService: ReminderService,
   ) {}
+
+  @Get()
+  testRoutineController() {
+    return 'TEST: RoutineController';
+  }
 
   @Get('/all')
   async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
@@ -99,14 +104,18 @@ export class RoutineController {
         await this.reminderService.scheduleReminder(
           routine.id,
           [
-
-            routineData.minute == undefined? '*' : routineData.minute.toString(),
-            routineData.hour == undefined? '*' : routineData.hour.toString(),
-            routineData.dayOfMonth == undefined? '*' : routineData.dayOfMonth.toString(),
-            routineData.month == undefined? '*' : routineData.month.toString(),
-            routineData.dayOfWeek == undefined? '*' : routineData.dayOfWeek.toString(),
+            routineData.minute == undefined
+              ? '*'
+              : routineData.minute.toString(),
+            routineData.hour == undefined ? '*' : routineData.hour.toString(),
+            routineData.dayOfMonth == undefined
+              ? '*'
+              : routineData.dayOfMonth.toString(),
+            routineData.month == undefined ? '*' : routineData.month.toString(),
+            routineData.dayOfWeek == undefined
+              ? '*'
+              : routineData.dayOfWeek.toString(),
           ].reduce((prev, curr) => (prev += ' ' + curr)),
-
         );
         /* eslint-enable */
         break;
