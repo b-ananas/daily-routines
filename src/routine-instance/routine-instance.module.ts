@@ -6,5 +6,6 @@ import { RoutineInstanceController } from './routine-instance.controller';
 @Module({
   providers: [RoutineInstanceService, PrismaService],
   controllers: [RoutineInstanceController],
+  exports: [RoutineInstanceService],
 })
 export class RoutineInstanceModule {}

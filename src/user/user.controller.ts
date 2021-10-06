@@ -22,7 +22,7 @@ export class UserController {
     return 'TEST: UserController';
   }
 
-  @Post('/')
+  @Post('/new')
   async signupUser(
     @Body() userData: UserRegisterType,
   ): Promise<UserReturnType> {

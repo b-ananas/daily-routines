@@ -11,11 +11,7 @@ import {
 } from '@nestjs/common';
 import { RoutineService } from './routine.service';
 
-import {
-  Routine as RoutineModel,
-  Activity as ActivityModel,
-  RoutineType,
-} from '@prisma/client';
+import { Routine as RoutineModel, RoutineType } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RoutineGuard } from './routine.guard';
 import { ReminderService } from 'src/reminder/reminder.service';
@@ -30,19 +26,14 @@ export class RoutineController {
     private reminderService: ReminderService,
   ) {}
 
-  @Get()
-  testRoutineController() {
-    return 'TEST: RoutineController';
-  }
-
-  @Get('/all')
+  @Get('/')
   async getActiveRoutines(@Request() req): Promise<RoutineModel[]> {
     return this.routineService.routines({
       where: { active: true, ownerId: req.user.userId },
     });
   }
 
-  @Post('') //todo: retrieve author email from jwt
+  @Post('/') //todo: retrieve author email from jwt
   async createRoutine(
     @Body()
     routineData: {
@@ -136,14 +127,6 @@ export class RoutineController {
   }
 
   @UseGuards(RoutineGuard)
-  @Get('/:id/activities') //todo: check
-  async getRoutineActivitiesById(
-    @Param('id') id: string,
-  ): Promise<ActivityModel[]> {
-    return this.routineService.routineActivities({ id: Number(id) });
-  }
-
-  @UseGuards(RoutineGuard)
   @Get('/:id/success-rate') //checked
   async getRoutineSuccessRatesById(@Param('id') id: string) {
     return this.routineInstanceService.getRoutineSuccessRate({
@@ -151,16 +134,16 @@ export class RoutineController {
     });
   }
 
-  @UseGuards(RoutineGuard)
-  @Get('/:id/instances') //checked
-  async getRoutineInstances(@Param('id') id: string) {
-    return this.routineInstanceService.getRoutineInstances(Number(id), 'asc');
-  }
   // @UseGuards(RoutineGuard)
-  // @Get('/instance/:id') //checked
-  // async getRoutineInstance(@Param('id') id: string) {
-  //   return this.routineInstanceService.getRoutineInstance(Number(id));
+  // @Get('/:id/instances') //checked
+  // async getRoutineInstances(@Param('id') id: string) {
+  //   return this.routineInstanceService.getRoutineInstances(Number(id), 'asc');
   // }
+  // // @UseGuards(RoutineGuard)
+  // // @Get('/instance/:id') //checked
+  // // async getRoutineInstance(@Param('id') id: string) {
+  // //   return this.routineInstanceService.getRoutineInstance(Number(id));
+  // // }
 
   //todo: this endpoint has little sense. Make it update routine, not just activate it
   @UseGuards(RoutineGuard)
