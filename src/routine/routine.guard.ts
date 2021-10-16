@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   UnauthorizedException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { RoutineService } from './routine.service';
 
@@ -13,7 +14,7 @@ export class RoutineGuard implements CanActivate {
   constructor(private readonly routineService: RoutineService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const routineId = request.params.id;
+    const routineId = request.params.routineId || request.params.id;
     const routine = await this.routineService.routine({
       id: Number(routineId),
     });
